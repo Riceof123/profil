@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stickman Runner - TESTING VINDO NET</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: #f2f2f2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    #game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 900px;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+    canvas {
+      border: 4px solid #222;
+      border-radius: 16px;
+      background: linear-gradient(#87ceeb, #70b3ec);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+      width: 100%;
+      max-width: 880px;
+      height: auto;
+    }
+    h1 {
+      margin: 0 0 8px;
+    }
+    p {
+      margin: 0 0 16px;
+      opacity: 0.8;
+    }
+    #controls {
+      margin-top: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+      max-width: 320px;
+      align-items: stretch;
+    }
+    button, a.button-link {
+      padding: 14px 22px;
+      border-radius: 12px;
+      border: none;
+      background: #1f1f1f;
+      color: #f2f2f2;
+      text-decoration: none;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.18);
+      width: 100%;
+    }
+    button:hover, a.button-link:hover {
+      transform: translateY(-2px);
+      background: #313131;
+      box-shadow: 0 14px 24px rgba(0,0,0,0.24);
+    }
+    #hud {
+      text-align: center;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    #score {
+      display: inline-block;
+      min-width: 48px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="hud">
+      <h1>Stickman Runner</h1>
+      <p>Tekan Spasi atau klik layar untuk lompat. Hindari rintangan dan selamatkan karakter stickman!</p>
+      <div>Skor: <span id="score">0</span></div>
+    </div>
+    <canvas id="gameCanvas" width="880" height="320"></canvas>
+    <div id="controls">
+      <button id="restartBtn">Mulai Ulang</button>
+      <a class="button-link" href="index.html">Kembali</a>
+    </div>
+  </div>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const restartBtn = document.getElementById('restartBtn');
+    const width = canvas.width;
+    const height = canvas.height;
+    let frame = 0;
+    let score = 0;
+    let gameSpeed = 4;
+    let gameOver = false;
+    const gravity = 0.5;
+    const player = {
+      x: 90,
+      y: height - 90,
+      width: 26,
+      height: 48,
+      vy: 0,
+      jumpPower: 12,
+      grounded: true,
+    };
+    const obstacles = [];
+
+    function reset() {
+      frame = 0;
+      score = 0;
+      gameSpeed = 6;
+      gameOver = false;
+      player.y = height - 90;
+      player.vy = 0;
+      player.grounded = true;
+      obstacles.length = 0;
+      scoreEl.textContent = score;
+    }
+
+    function spawnObstacle() {
+      const size = 28 + Math.random() * 22;
+      obstacles.push({
+        x: width + 40,
+        y: height - 28 - size,
+        width: size,
+        height: size,
+      });
+    }
+
+    function jump() {
+      if (!gameOver && player.grounded) {
+        player.vy = -player.jumpPower;
+        player.grounded = false;
+      }
+      if (gameOver) {
+        reset();
+        loop();
+      }
+    }
+
+    function update() {
+      if (gameOver) return;
+      frame++;
+      if (frame % 110 === 0) spawnObstacle();
+      if (frame % 18 === 0) score++;
+      if (frame % 240 === 0 && gameSpeed < 5) gameSpeed += 0.1;
+      player.vy += gravity;
+      player.y += player.vy;
+      if (player.y > height - 90) {
+        player.y = height - 90;
+        player.vy = 0;
+        player.grounded = true;
+      }
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        obstacles[i].x -= gameSpeed;
+        if (obstacles[i].x + obstacles[i].width < -10) obstacles.splice(i, 1);
+      }
+      const collision = obstacles.some(obs => {
+        return player.x < obs.x + obs.width && player.x + player.width > obs.x && player.y < obs.y + obs.height && player.y + player.height > obs.y;
+      });
+      if (collision) gameOver = true;
+      scoreEl.textContent = score;
+    }
+
+    function drawStickman(cx, cy, time) {
+      const step = Math.sin(time * 0.12);
+      const armSwing = 14 + step * 4;
+      const legSwing = 20 + step * 6;
+      ctx.strokeStyle = '#111';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy + 16);
+      ctx.lineTo(cx - 10, cy + 44 + step * 2);
+      ctx.moveTo(cx, cy + 16);
+      ctx.lineTo(cx + 10, cy + 44 - step * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy + 16);
+      ctx.lineTo(cx, cy - 14);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy + 2);
+      ctx.lineTo(cx - armSwing, cy + 16);
+      ctx.moveTo(cx, cy + 2);
+      ctx.lineTo(cx + armSwing, cy + 16);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx, cy - 26, 10, 0, Math.PI * 2);
+      ctx.fillStyle = '#111';
+      ctx.fill();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#87ceeb';
+      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = '#3f3f3f';
+      ctx.fillRect(0, height - 22, width, 22);
+      ctx.fillStyle = '#1c1c1c';
+      ctx.fillRect(0, height - 22, width, 6);
+      obstacles.forEach(obs => {
+        ctx.fillStyle = '#3d3d3d';
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+      });
+      drawStickman(player.x + 14, player.y + 22, frame);
+      if (gameOver) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 40px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Game Over', width / 2, height / 2 - 10);
+        ctx.font = '18px Arial';
+        ctx.fillText('Klik tombol Mulai Ulang untuk bermain lagi', width / 2, height / 2 + 24);
+      }
+    }
+
+    function loop() {
+      update();
+      draw();
+      if (!gameOver) requestAnimationFrame(loop);
+    }
+
+    document.body.addEventListener('keydown', event => {
+      if (event.code === 'Space') {
+        event.preventDefault();
+        jump();
+      }
+    });
+    canvas.addEventListener('mousedown', jump);
+    restartBtn.addEventListener('click', () => {
+      reset();
+      loop();
+    });
+
+    reset();
+    loop();
+  </script>
+</body>
+</html>
