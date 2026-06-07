@@ -1,0 +1,41 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sampai Jumpa Lagi</title>
+  <style>
+    :root { --bg:#0b0f14; --card:#0f1720; --accent:#ffd166; }
+    html,body{height:100%;margin:0}
+    body{display:flex;align-items:center;justify-content:center;background:var(--bg);font-family:Inter,Arial,Helvetica,sans-serif;color:#fff}
+    .card{max-width:900px;padding:48px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.18));box-shadow:0 30px 80px rgba(0,0,0,0.6);text-align:center}
+    h1{margin:0 0 12px;font-size:34px;color:var(--accent)}
+    p.lead{margin:0 0 18px;font-size:18px;opacity:0.95}
+    .langs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:18px}
+    .item{background:rgba(255,255,255,0.02);padding:14px;border-radius:10px}
+    .label{font-weight:700;margin-bottom:6px;opacity:0.9}
+    .text{font-size:16px}
+    .action-btn{margin:24px auto 0;display:inline-block;padding:12px 24px;border:none;border-radius:999px;background:var(--accent);color:#0b0f14;font-weight:700;cursor:pointer;transition:transform .2s,filter .2s}
+    .action-btn:hover{transform:scale(1.03);filter:brightness(1.05)}
+    footer{margin-top:20px;opacity:0.6;font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Sampai Jumpa Lagi</h1>
+    <p class="lead">Website ini telah dikosongkan. Terima kasih — sampai bertemu lagi.</p>
+
+    <div class="langs">
+      <div class="item"><div class="label">Indonesia</div><div class="text">Sampai Jumpa Lagi Kapan-Kapan</div></div>
+      <div class="item"><div class="label">English</div><div class="text">See you again sometime</div></div>
+      <div class="item"><div class="label">日本語 (Japanese)</div><div class="text">また今度会いましょう</div></div>
+      <div class="item"><div class="label">한국어 (Korean)</div><div class="text">다음에 또 만나요</div></div>
+      <div class="item"><div class="label">Latin</div><div class="text">Vale, aliquando iterum</div></div>
+      <div class="item"><div class="label">中文 (Chinese)</div><div class="text">下次再见</div></div>
+    </div>
+
+    <button class="action-btn" onclick="window.location.href='https://youtu.be/dQw4w9WgXcQ?si=xgSR64zNkr7Tb848'">Klik Ini</button>
+    <footer>— Sampai Jumpa —</footer>
+  </div>
+</body>
+</html>
