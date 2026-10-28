@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0a0c14">
+  <title>Cyber Strike 2D - Top Down Shooter</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Container Game Canvas -->
+  <div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Top HUD (Heads Up Display) -->
+    <div id="hud-top" class="ui-panel">
+      <!-- Player HP Bar -->
+      <div class="hud-stat-box health-box">
+        <div class="stat-label">
+          <span>❤️ HP</span>
+          <span id="hp-text">100 / 100</span>
+        </div>
+        <div class="bar-container">
+          <div id="hp-bar" class="bar-fill" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <!-- Level & Enemies Counter -->
+      <div class="hud-center-box">
+        <div class="badge-row">
+          <div id="level-display" class="badge-level">LEVEL 1</div>
+          <div id="difficulty-badge" class="badge-diff diff-normal">NORMAL</div>
+        </div>
+        <div class="enemies-badge">
+          <span class="icon">👾</span>
+          <span>Sisa: <strong id="enemy-count">0</strong></span>
+        </div>
+      </div>
+
+      <!-- Score & Pause Button -->
+      <div class="hud-right-box">
+        <div class="score-badge">
+          <span>SKOR:</span>
+          <strong id="score-text">0</strong>
+        </div>
+        <div id="fps-display" class="fps-badge">60 FPS</div>
+        <button id="btn-sound" class="icon-btn" title="Suara On/Off">🔊</button>
+        <button id="btn-fullscreen" class="icon-btn" title="Layar Penuh">⛶</button>
+        <button id="btn-pause" class="icon-btn" title="Jeda">⏸️</button>
+      </div>
+    </div>
+
+    <!-- Active Weapon Indicator (Desktop & Mobile) -->
+    <div id="hud-weapon-bar" class="ui-panel">
+      <div class="weapon-slots" id="weapon-slots-container">
+        <!-- Will be populated dynamically via JavaScript -->
+      </div>
+    </div>
+
+    <!-- 3 Skills Bar (Desktop & Mobile) -->
+    <div id="hud-skill-bar" class="ui-panel">
+      <!-- Skill 1: Rapid Regeneration -->
+      <button id="skill-regen-btn" class="skill-btn ready" title="Regenerasi Cepat (Tombol F)">
+        <span class="skill-icon">💚</span>
+        <span class="skill-label">REGEN <small class="key-hint">[F]</small></span>
+        <div id="skill-regen-cd" class="skill-cooldown-overlay"></div>
+      </button>
+
+      <!-- Skill 2: Summon Allies Drones -->
+      <button id="skill-summon-btn" class="skill-btn ready" title="Panggil Teman Droid (Tombol G)">
+        <span class="skill-icon">🤖</span>
+        <span class="skill-label">TEMAN <small class="key-hint">[G]</small></span>
+        <div id="skill-summon-cd" class="skill-cooldown-overlay"></div>
+      </button>
+
+      <!-- Skill 3: Instant Screen Kill Nuke (Single-Use Only) -->
+      <button id="skill-nuke-btn" class="skill-btn ready pulse-nuke" title="Pemusnah Massal (1x Pakai Saja!) (Tombol V)">
+        <span class="skill-icon">☢️</span>
+        <span class="skill-label">NUKE <small class="key-hint">[V]</small></span>
+        <div id="skill-nuke-cd" class="skill-cooldown-overlay"></div>
+      </button>
+    </div>
+
+    <!-- Mobile Virtual Controls Layer (Only active/visible on touch devices or toggled) -->
+    <div id="mobile-controls">
+      <!-- Left Movement Joystick Zone -->
+      <div id="joystick-move-zone" class="joystick-zone">
+        <div id="joystick-move-base" class="joystick-base">
+          <div id="joystick-move-stick" class="joystick-stick"></div>
+        </div>
+        <span class="touch-hint">GERAK</span>
+      </div>
+
+      <!-- Right Aim & Shoot Joystick Zone -->
+      <div id="joystick-aim-zone" class="joystick-zone">
+        <div id="joystick-aim-base" class="joystick-base">
+          <div id="joystick-aim-stick" class="joystick-stick aim-stick"></div>
+        </div>
+        <span class="touch-hint">BIDIK & TEMBAK</span>
+      </div>
+
+      <!-- Quick Action Buttons on Mobile -->
+      <div id="mobile-action-buttons">
+        <button id="btn-dash" class="action-btn dash-btn" title="Dash / Menghindar">
+          <span>⚡</span>
+          <small>DASH</small>
+        </button>
+        <button id="btn-manual-fire" class="action-btn fire-btn" title="Tembak Manual">
+          <span>🎯</span>
+          <small>TEMBAK</small>
+        </button>
+      </div>
+    </div>
+
+    <!-- Notifications Banner (Level up, unlocks, warnings) -->
+    <div id="alert-banner" class="hidden">
+      <div id="alert-text">Pemberitahuan</div>
+    </div>
+
+    <!-- Overlays & Modals -->
+    <!-- Start Screen Modal -->
+    <div id="screen-start" class="modal-overlay">
+      <div class="modal-card">
+        <div class="logo-title">
+          <div class="subtitle">TACTICAL 2D TOP-DOWN SHOOTER</div>
+          <h1>CYBER STRIKE</h1>
+          <div class="version-tag">EDISI 5 LEVEL • MOBILE & DESKTOP</div>
+        </div>
+
+        <div class="card-content">
+          <div class="mission-brief">
+            Pangkalan militer telah dikuasai gerombolan musuh cyborg dan mutan!
+            Selesaikan <strong>5 Level</strong>, dapatkan senjata baru di tiap level, dan kalahkan <strong>Titan Overlord</strong> di Level 5.
+          </div>
+
+          <!-- Difficulty Selector -->
+          <div class="difficulty-selection-section">
+            <h3 class="section-title">PILIH TINGKAT KESULITAN:</h3>
+            <div class="difficulty-grid" id="difficulty-options">
+              <button class="diff-btn" data-diff="easy">
+                <span class="diff-icon">🌱</span>
+                <span class="diff-name">Mudah</span>
+                <small class="diff-stat">Musuh Santai</small>
+              </button>
+              <button class="diff-btn active" data-diff="normal">
+                <span class="diff-icon">⚔️</span>
+                <span class="diff-name">Normal</span>
+                <small class="diff-stat">Tantangan Seimbang</small>
+              </button>
+              <button class="diff-btn" data-diff="hard">
+                <span class="diff-icon">🔥</span>
+                <span class="diff-name">Sulit</span>
+                <small class="diff-stat">Musuh Agresif</small>
+              </button>
+              <button class="diff-btn" data-diff="extreme">
+                <span class="diff-icon">⚡</span>
+                <span class="diff-name">Extreme</span>
+                <small class="diff-stat">Kecepatan Tinggi</small>
+              </button>
+              <button class="diff-btn" data-diff="hell">
+                <span class="diff-icon">💀</span>
+                <span class="diff-name">Neraka</span>
+                <small class="diff-stat">Mode Brutal</small>
+              </button>
+            </div>
+            <div id="diff-description" class="diff-desc-box">
+              Tantangan seimbang dengan kecepatan dan daya tahan musuh standar.
+            </div>
+          </div>
+
+          <div class="control-guides">
+            <div class="guide-col">
+              <h4>💻 Kontrol Komputer (PC/Laptop):</h4>
+              <ul>
+                <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / Arah: Bergerak</li>
+                <li><kbd>Mouse</kbd>: Bidik | <kbd>Klik Kiri</kbd>: Tembak</li>
+                <li><kbd>1</kbd> - <kbd>6</kbd> / Scroll: Ganti Senjata</li>
+                <li><kbd>Spasi</kbd>: Dash (Menghindar cepat)</li>
+                <li><kbd>F</kbd>: Skill 💚 Regenerasi Cepat (30s)</li>
+                <li><kbd>G</kbd>: Skill 🤖 Panggil Teman Droid (20s)</li>
+                <li><kbd>V</kbd>: Skill ☢️ Pemusnah Massal (1x Pakai)</li>
+              </ul>
+            </div>
+            <div class="guide-col">
+              <h4>📱 Kontrol HP (Android / iOS):</h4>
+              <ul>
+                <li><strong>Joystick Kiri</strong>: Gerak Dinamis 360°</li>
+                <li><strong>Joystick Kanan</strong>: Bidik & Tembak Otomatis</li>
+                <li><strong>Tombol Senjata</strong> di bawah untuk ganti senjata</li>
+                <li><strong>Tombol ⚡ DASH</strong> untuk kebal & menghindar</li>
+                <li><strong>Tombol Skill</strong>: 💚 Regen, 🤖 Teman, ☢️ Nuke</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <button id="btn-start-game" class="primary-btn pulse-anim">
+          ▶ MULAI MISI
+        </button>
+      </div>
+    </div>
+
+    <!-- Level Complete Modal -->
+    <div id="screen-level-clear" class="modal-overlay hidden">
+      <div class="modal-card success-card">
+        <div class="card-header">
+          <div class="trophy-icon">🏆</div>
+          <h2>LEVEL BERSIH!</h2>
+          <p id="level-clear-title">Zona Berhasil Diamankan</p>
+        </div>
+
+        <div class="card-stats">
+          <div class="stat-row">
+            <span>Musuh Dieliminasi:</span>
+            <strong id="stat-level-kills">0</strong>
+          </div>
+          <div class="stat-row">
+            <span>Akurasi Tembakan:</span>
+            <strong id="stat-level-accuracy">0%</strong>
+          </div>
+          <div class="stat-row">
+            <span>Total Skor:</span>
+            <strong id="stat-level-score">0</strong>
+          </div>
+        </div>
+
+        <div id="unlock-announcement" class="unlock-box hidden">
+          <span class="unlock-tag">SENJATA BARU DIBUKA!</span>
+          <div id="unlock-name" class="unlock-title">Senapan Mesin (SMG)</div>
+          <div id="unlock-desc" class="unlock-desc">Kecepatan tembak ultra cepat untuk menyapu kawanan musuh!</div>
+        </div>
+
+        <button id="btn-next-level" class="primary-btn">
+          LANJUT KE LEVEL BERIKUTNYA ➔
+        </button>
+      </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="screen-game-over" class="modal-overlay hidden">
+      <div class="modal-card danger-card">
+        <div class="card-header">
+          <div class="skull-icon">💀</div>
+          <h2>MISI GAGAL</h2>
+          <p>Karaktermu gugur dalam pertempuran!</p>
+        </div>
+
+        <div class="card-stats">
+          <div class="stat-row">
+            <span>Gugur di:</span>
+            <strong id="over-level">Level 1</strong>
+          </div>
+          <div class="stat-row">
+            <span>Skor Akhir:</span>
+            <strong id="over-score">0</strong>
+          </div>
+          <div class="stat-row">
+            <span>Musuh Dikalahkan:</span>
+            <strong id="over-kills">0</strong>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button id="btn-retry-level" class="primary-btn">
+            🔄 ULANGI LEVEL INI
+          </button>
+          <button id="btn-restart-game" class="secondary-btn">
+            ⏮ MULAI DARI LEVEL 1
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Victory Modal (Completed Level 5) -->
+    <div id="screen-victory" class="modal-overlay hidden">
+      <div class="modal-card victory-card">
+        <div class="card-header">
+          <div class="crown-icon">👑</div>
+          <h1 class="victory-title">MISI SELESAI!</h1>
+          <p class="victory-sub">KAMU ADALAH PAHLAWAN CYBER STRIKE!</p>
+        </div>
+
+        <p class="victory-story">
+          Titan Overlord telah dihancurkan! Seluruh 5 zona pangkalan militer berhasil dibebaskan dari ancaman mutan dan cyborg.
+        </p>
+
+        <div class="card-stats">
+          <div class="stat-row">
+            <span>Total Skor Pertempuran:</span>
+            <strong id="victory-score">0</strong>
+          </div>
+          <div class="stat-row">
+            <span>Total Musuh Dieliminasi:</span>
+            <strong id="victory-kills">0</strong>
+          </div>
+        </div>
+
+        <button id="btn-play-again" class="primary-btn pulse-anim">
+          🌟 MAIN LAGI DARI AWAL
+        </button>
+      </div>
+    </div>
+
+    <!-- Pause Modal -->
+    <div id="screen-pause" class="modal-overlay hidden">
+      <div class="modal-card mini-card">
+        <h2>PERMAINAN DIJEDA</h2>
+        
+        <!-- Mobile & Performance Settings in Pause Menu -->
+        <div class="settings-group">
+          <div class="setting-item">
+            <span>🎯 Bantuan Bidik (Aim Assist):</span>
+            <button id="toggle-aim-assist" class="toggle-btn active">AKTIF</button>
+          </div>
+          <div class="setting-item">
+            <span>📳 Getaran Layar Sentuh:</span>
+            <button id="toggle-haptics" class="toggle-btn active">AKTIF</button>
+          </div>
+          <div class="setting-item">
+            <span>⚡ Mode Performa (60+ FPS):</span>
+            <button id="toggle-perf-mode" class="toggle-btn">HEMAT</button>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button id="btn-resume" class="primary-btn">▶ LANJUTKAN</button>
+          <button id="btn-restart-from-pause" class="secondary-btn">🔄 RESTART LEVEL</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="js/audio.js"></script>
+  <script src="js/weapons.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/skills.js"></script>
+  <script src="js/controls.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
